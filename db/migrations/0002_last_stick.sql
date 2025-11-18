@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `articles_original_id_unique` ON `articles` (`original_id`);

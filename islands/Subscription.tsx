@@ -12,7 +12,7 @@ export default function Subscription() {
     if (feedUrl != null && feedUrl.trim() != "") {
       url.value = feedUrl;
 
-      fetch(`/api/subscription`, {
+      fetch(`/api/rss`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

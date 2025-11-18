@@ -1,58 +1,105 @@
 import { Head } from "fresh/runtime";
 import { define } from "../utils.ts";
 import Subscription from "../islands/Subscription.tsx";
+import { db } from "../db/index.ts";
+import { articles } from "../db/schema/index.ts";
+import { desc } from "drizzle-orm";
+import { dayjs } from "@xtool/dayjs";
 
-export default define.page(function Home() {
+export const handler = define.handlers({
+  async GET() {
+    const arts = await db
+      .select({
+        id: articles.id,
+        title: articles.title,
+        authorName: articles.authorName,
+        published: articles.published,
+        link: articles.link,
+      })
+      .from(articles)
+      .orderBy(desc(articles.published))
+      .all();
+
+    // 按年月分组
+    const groupedByMonth = arts.reduce(
+      (acc, article) => {
+        if (!article.published) return acc;
+
+        const date = dayjs(article.published);
+        const yearMonth = date.format("YYYY-MM");
+
+        if (!acc[yearMonth]) {
+          acc[yearMonth] = {
+            yearMonth,
+            displayName: date.format("YYYY 年 M 月"),
+            articles: [],
+          };
+        }
+
+        acc[yearMonth].articles.push(article);
+        return acc;
+      },
+      {} as Record<
+        string,
+        { yearMonth: string; displayName: string; articles: typeof arts }
+      >,
+    );
+
+    // 转换为数组并排序
+    const groupedData = Object.values(groupedByMonth).sort((a, b) =>
+      b.yearMonth.localeCompare(a.yearMonth)
+    );
+
+    return { data: groupedData };
+  },
+});
+
+export default define.page<typeof handler>(function Home({ data }) {
   return (
     <div class="px-4 py-8 mx-auto fresh-gradient min-h-screen">
       <Head>
-        <title>Fresh counter</title>
+        <title>Fresh RSS</title>
       </Head>
       <div class="max-w-3xl mx-auto pt-12">
-        <table>
-          <caption>
-            December 2025 / 2025 年 12 月
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col" className="break-keep">作者</th>
-              <th scope="col">标题</th>
-              <th scope="col">日期</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">阮一峰</th>
-              <td className="jc">
-                具有 TypeScript
-                端到端的类型安全，统一的类型系统和出色的开发人员体验。由 Bun
-                提供加速支持。
-              </td>
-              <td>22</td>
-            </tr>
-            <tr>
-              <th scope="row">-</th>
-              <td>Web accessibility</td>
-              <td>25</td>
-            </tr>
-            <tr>
-              <th scope="row">土木坛子</th>
-              <td>JavaScript frameworks</td>
-              <td>18</td>
-            </tr>
-            <tr>
-              <th scope="row">Karen</th>
-              <td>具有 TypeScript 验。由 Bun 提供加速支持。</td>
-              <td>15</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr>
-              <th scope="row" colspan={2}>本月总发布数量</th>
-              <td>8 篇</td>
-            </tr>
-          </tfoot>
-        </table>
+        {data.map((group) => (
+          <div key={group.yearMonth} className="mb-12">
+            <table>
+              <caption>
+                {group.displayName}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="break-keep">作者</th>
+                  <th scope="col">标题</th>
+                  <th scope="col">日期</th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.articles.map((article) => (
+                  <tr key={article.id}>
+                    <th scope="row">{article.authorName}</th>
+                    <td className="cursor-pointer">
+                      <a
+                        href={article.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {article.title}
+                      </a>
+                    </td>
+                    <td>{dayjs(article.published).format("DD")}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th scope="row" colspan={2}>本月总发布数量</th>
+                  <td>{group.articles.length} 篇</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        ))}
 
         <div className="flex justify-end">
           <Subscription />
