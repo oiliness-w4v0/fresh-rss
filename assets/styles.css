@@ -43,7 +43,7 @@ tfoot td {
 }
 
 tr th:first-child {
-  width: 100px;
+  min-width: 100px;
 }
 
 tr th:last-child {

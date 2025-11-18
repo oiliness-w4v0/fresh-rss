@@ -1,6 +1,7 @@
 import { Head } from "fresh/runtime";
 import { define } from "../utils.ts";
 import Subscription from "../islands/Subscription.tsx";
+import Td from "../islands/Td.tsx";
 import { db } from "../db/index.ts";
 import { articles } from "../db/schema/index.ts";
 import { desc } from "drizzle-orm";
@@ -61,6 +62,10 @@ export default define.page<typeof handler>(function Home({ data }) {
         <title>Fresh RSS</title>
       </Head>
       <div class="max-w-3xl mx-auto pt-12">
+        <div className="flex justify-end">
+          <Subscription />
+        </div>
+
         {data.map((group) => (
           <div key={group.yearMonth} className="mb-12">
             <table>
@@ -78,7 +83,12 @@ export default define.page<typeof handler>(function Home({ data }) {
                 {group.articles.map((article) => (
                   <tr key={article.id}>
                     <th scope="row">{article.authorName}</th>
-                    <td className="cursor-pointer">
+                    <Td link={article.link} title={article.title} />
+                    {
+                      /* <td
+                      className="cursor-pointer hover:bg-zinc-900/10"
+                      onClick={() => {}}
+                    >
                       <a
                         href={article.link}
                         target="_blank"
@@ -86,7 +96,8 @@ export default define.page<typeof handler>(function Home({ data }) {
                       >
                         {article.title}
                       </a>
-                    </td>
+                    </td> */
+                    }
                     <td>{dayjs(article.published).format("DD")}</td>
                   </tr>
                 ))}
@@ -100,10 +111,6 @@ export default define.page<typeof handler>(function Home({ data }) {
             </table>
           </div>
         ))}
-
-        <div className="flex justify-end">
-          <Subscription />
-        </div>
       </div>
     </div>
   );
