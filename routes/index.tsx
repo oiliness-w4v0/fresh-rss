@@ -1,5 +1,6 @@
 import { Head } from "fresh/runtime";
 import { define } from "../utils.ts";
+import Subscription from "../islands/Subscription.tsx";
 
 export default define.page(function Home() {
   return (
@@ -7,7 +8,7 @@ export default define.page(function Home() {
       <Head>
         <title>Fresh counter</title>
       </Head>
-      <div class="max-w-3xl mx-auto pt-32">
+      <div class="max-w-3xl mx-auto pt-12">
         <table>
           <caption>
             December 2025 / 2025 年 12 月
@@ -52,6 +53,10 @@ export default define.page(function Home() {
             </tr>
           </tfoot>
         </table>
+
+        <div className="flex justify-end">
+          <Subscription />
+        </div>
       </div>
     </div>
   );
